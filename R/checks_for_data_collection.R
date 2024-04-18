@@ -11,24 +11,25 @@ library(supporteR)
 # data
 data_path <- "inputs/ETH2306b_ABA_Tigray_Somali_data.xlsx"
 
-df_tool_data <- readxl::read_excel(data_path)  |>  
+
+df_tool_data <- readxl::read_excel(data_path) |>  
   mutate(start = as_datetime(start),
          end = as_datetime(end),
          enumerator_id = ifelse(is.na(enumerator_id), enum_id, enumerator_id)) |> 
   checks_add_extra_cols(input_enumerator_id_col = "enumerator_id",
-                        input_location_col = "hh_woreda") 
-  
+                        input_location_col = "hh_woreda")
+                        
 # tool
 loc_tool <- "inputs/ETH2306b_ABA_Tigray_Somali_tool.xlsx"
 
 df_survey <- readxl::read_excel(loc_tool, sheet = "survey")
 df_choices <- readxl::read_excel(loc_tool, sheet = "choices")
 
-# checks ------------------------------------------------------------------
+# checks ----------------------------------------------------------------------
 
 checks_output <- list()
 
-# testing data ------------------------------------------------------------
+# testing data ----------------------------------------------------------------
 
 df_testing_data <- df_tool_data |> 
   filter(i.check.start_date < as_date("2024-04-19")) |> 
@@ -50,7 +51,7 @@ df_testing_data <- df_tool_data |>
 
 add_checks_data_to_list(input_list_name = "checks_output", input_df_name = "df_testing_data")
 
-# Time checks -------------------------------------------------------------
+# Time checks -----------------------------------------------------------------
 
 # Time interval for the survey
 min_time_of_survey <- 20
@@ -64,13 +65,13 @@ df_c_survey_time <-  supporteR::check_survey_time(input_tool_data = df_tool_data
 
 add_checks_data_to_list(input_list_name = "checks_output", input_df_name = "df_c_survey_time")
 
-# check duplicate uuids ---------------------------------------------------
+# check duplicate uuids -------------------------------------------------------
 
 df_c_duplicate_uuid <-  supporteR::checks_duplicate_uuids(input_tool_data = df_tool_data)
 
 add_checks_data_to_list(input_list_name = "checks_output", input_df_name = "df_c_duplicate_uuid")
 
-# outliers ----------------------------------------------------------------
+# outliers --------------------------------------------------------------------
 
 df_c_outliers <- supporteR::check_outliers_cleaninginspector(input_tool_data = df_tool_data,
                                                              input_enumerator_id_col = "enumerator_id",
@@ -78,7 +79,7 @@ df_c_outliers <- supporteR::check_outliers_cleaninginspector(input_tool_data = d
 
 add_checks_data_to_list(input_list_name = "checks_output", input_df_name = "df_c_outliers")
 
-# other_specify -----------------------------------------------------------
+# other_specify ---------------------------------------------------------------
 
 df_others_data <- supporteR::extract_other_specify_data(input_tool_data = df_tool_data, 
                                                         input_enumerator_id_col = "enumerator_id",
@@ -88,7 +89,7 @@ df_others_data <- supporteR::extract_other_specify_data(input_tool_data = df_too
 
 add_checks_data_to_list(input_list_name = "checks_output", input_df_name = "df_others_data")
 
-# spatial checks ----------------------------------------------------------
+# spatial checks --------------------------------------------------------------
 
 # logical checks --------------------------------------------------------------
 
@@ -98,7 +99,8 @@ df_combined_checks <- bind_rows(checks_output)
 
 # output the log --------------------------------------------------------------
 
-write_csv(x = df_combined_checks, file = paste0("outputs/", butteR::date_file_prefix(), "_combined_checks_eth_aba_tigray_somali.csv"), na = "")
+write_csv(x = df_combined_checks, file = paste0("outputs/", butteR::date_file_prefix(), 
+                                                "_combined_checks_eth_aba_tigray_somali.csv"), na = "")
 
 ###############################################################################
 
