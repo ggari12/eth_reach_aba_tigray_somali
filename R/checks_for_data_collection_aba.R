@@ -7,11 +7,13 @@ library(tidyverse)
 library(lubridate)
 library(glue)
 library(supporteR)
-remotes::install_github("ellieallien/cleaninginspectoR")
+library(cleaningtools)
+# install.packages("devtools")
+#devtools::install_github("impact-initiatives/cleaningtools")
 
 # read data and tool ----------------------------------------------------------
 # data
-data_path <- "inputs/ETH2306b_ABA_Tigray_Somali_data_2024-04-23-06-38-03.xlsx"
+data_path <- "inputs/ETH2306b_ABA_Tigray_Somali_data_2024-04-25-07-35-50.xlsx"
 
 
 df_tool_data <- readxl::read_excel(data_path) |>  
@@ -33,6 +35,8 @@ df_tool_data <- readxl::read_excel(data_path) |>
             "mobile_clinics_location2_other",
             "hh_healthcare_non_functionality_reasons_other",
             "hh_healthcare_location2_other"))
+
+
 
 
 # loops -----------------------------------------------------------------------
@@ -170,7 +174,7 @@ df_repeat_others_data_educ <- supporteR::extract_other_specify_data_repeats(inpu
                                                                        input_choices = df_choices,
                                                                        input_sheet_name = "education_loop",
                                                                        input_repeat_cols = c("hh_education_level_attend", "education_facility_owner","education_functionality_status_no"))|>
-  mutate(region = as.character(index))
+  mutate(region = as.character(region))
 
 add_checks_data_to_list(input_list_name = "checks_output", input_df_name = "df_repeat_others_data_educ")
 
@@ -183,7 +187,7 @@ df_repeat_others_data_educ2 <- supporteR::extract_other_specify_data_repeats(inp
                                                                        input_choices = df_choices,
                                                                        input_sheet_name = "education_loop2",
                                                                        input_repeat_cols = c("not_attending_reasons","dropout_reason"))|>
-  mutate(region = as.character(index))
+  mutate(region = as.character(region))
 
 
 add_checks_data_to_list(input_list_name = "checks_output", input_df_name = "df_repeat_others_data_educ2")
