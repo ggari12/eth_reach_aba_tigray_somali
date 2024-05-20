@@ -37,5 +37,5 @@ df_combine_data <-bind_rows(data_list[[1]], data_list[[2]], data_list[[3]])
 # output the log --------------------------------------------------------------
 
 write_csv(x = df_combine_data, file = paste0("outputs/", butteR::date_file_prefix(), 
-                                                "_combined_checks_eth_aba_somali_carlos.csv"), na = "")
+                                                "_combined_checks_eth_aba_somali_test.csv"), na = "")
 
