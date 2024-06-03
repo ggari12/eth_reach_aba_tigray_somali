@@ -41,13 +41,9 @@ data_nms <- names(readxl::read_excel(path = data_path, n_max = 3000))
 c_types <- case_when(str_detect(string = data_nms, pattern = "_other$") ~ "text", TRUE ~ "guess")
 
 df_raw_data <- readxl::read_excel(path = data_path, col_types = c_types, na = c("NA", "N/A", "n/a"))|>
-  select(-c(starts_with("not_attending_reasons")))|>
-  mutate(across(everything(),~ifelse(.x =="other","",.)))
+  select(-c(starts_with("not_attending_reasons")))
 
 
- openxlsx::write.xlsx(x = df_raw_data,
-                     file = paste0("outputs/", butteR::date_file_prefix(), 
-                                   "_test_other.xlsx"))
 
 
 #|> 
@@ -198,10 +194,10 @@ openxlsx::write.xlsx(x = list_of_raw_datasets,
                      file = paste0("outputs/", butteR::date_file_prefix(), 
                                    "_raw_data_eth_aba_somali.xlsx"))
 
-list_of_clean_datasets <- list("cleaned_main_data" = df_main_with_composites|>select(-ends_with(c("_other","_cl","_exp3","_exp2","_exp3","_exp","_sc2","_sc","_sc3", "_services2"))),
-                               "cleaned_roster_loop" = df_cleaned_data_log_roster|>select(-ends_with(c("_other","_cl","_exp3","_exp2","_exp", "_sc2", "_sc","_sc3"))),
-                               "cleaned_educ_loop" = df_cleaned_data_log_educ|>select(-ends_with(c("_other","_cl","_exp3","_exp2","_exp","_sc2","_sc","_sc3"))),
-                               "cleaned_educ_loop2" = df_cleaned_data_log_educ2|>select(-ends_with(c("_other", "_cl","_exp3","_exp2","_exp", "_sc2","_sc","_sc3"))))
+list_of_clean_datasets <- list("cleaned_main_data" = df_main_with_composites|>select(-ends_with("_other")),
+                               "cleaned_roster_loop" = df_cleaned_data_log_roster|>select(-ends_with("_other")),
+                               "cleaned_educ_loop" = df_cleaned_data_log_educ|>select(-ends_with("_other")),
+                               "cleaned_educ_loop2" = df_cleaned_data_log_educ2|>select(-ends_with("_other")))
 
 openxlsx::write.xlsx(x = list_of_clean_datasets,
                      file = paste0("outputs/", butteR::date_file_prefix(), 
