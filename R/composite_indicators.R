@@ -16,7 +16,7 @@ create_composite_indicators <- function(input_df) {
                                         hoh_no <= 59 ~ "age_40_59",
                                         hoh_no > 59 ~ "age_60+"),
            
-           i.hh_age= case_when(hh_age <= 24 ~ "age_18_24",
+           i.hh_age = case_when(hh_age <= 24 ~ "age_18_24",
                                hh_age <= 39 ~ "age_25_39",
                                hh_age <= 59 ~ "age_40_59",
                                hh_age > 59 ~ "age_60+"))|> 

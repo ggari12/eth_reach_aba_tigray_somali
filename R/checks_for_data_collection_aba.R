@@ -13,7 +13,7 @@ library(cleaningtools)
 
 # read data and tool ----------------------------------------------------------
 # data
-data_path <- "inputs/ETH2306b_ABA_Tigray_Somali_data_2024-04-25-07-35-50.xlsx"
+data_path <- "inputs/ETH2306b_ABA_Tigray_Somali_data_2024-05-02-08-25-33.xlsx"
 
 
 df_tool_data <- readxl::read_excel(data_path) |>  
