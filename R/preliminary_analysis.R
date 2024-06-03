@@ -12,7 +12,7 @@ source("R/composite_indicators.R")
 # devtools::install_github("twesigye10/supporteR")
 
 # clean data
-data_path <- "outputs/20240520_clean_data_eth_aba_somali_tigray.xlsx"
+data_path <- "outputs/20240523_clean_data_eth_aba_somali.xlsx"
 
 data_nms <- names(readxl::read_excel(path = data_path, n_max = 3000, sheet = "cleaned_main_data"))
 c_types <- ifelse(str_detect(string = data_nms, pattern = "_other$"), "text", "guess")
@@ -24,6 +24,11 @@ df_main_cleand_data <- readxl::read_excel(path = data_path, sheet = "cleaned_mai
                 region = case_when(region =="ET05"~"Somali",
                                    region == "ET01"~	"Tigray"))|>
   select_if(~ any(!is.na(.)))
+
+df_main_cleand_data <- df_main_cleand_data|>
+  mutate(drinking_water_source = ifelse(region == "Tigray"&drinking_water_source=="public_tap", "hand_pump",drinking_water_source),
+         cleaning_water_source =  ifelse(region == "Tigray"&cleaning_water_source=="public_tap", "hand_pump",cleaning_water_source))
+
 
 numeric_cols <- c("hh_age",
                   "hoh_no",
@@ -64,6 +69,10 @@ df_cleaned_educ2_data <- loop_support_data |>
 
 #Load data clean roster loop
 roster_loop  <- readxl::read_excel(path = data_path, sheet = "cleaned_roster_loop", na = "NA")
+df_cleaned_roster_data <- loop_support_data |> 
+  inner_join(roster_loop, by = c("uuid" = "_submission__uuid"))|>
+  mutate(ind_educational_status = ifelse(ind_educational_status%in%c("na","not_applicable"),NA_character_,ind_educational_status))
+
 
 
 # tool
@@ -77,11 +86,11 @@ df_tool_data_support <- df_survey |>
   separate(col = type, into = c("select_type", "list_name"), sep =" ", remove = TRUE, extra = "drop" )
 
 # dap
-dap <- read_csv("inputs/r_dap_eth_aba_tigray_somali.csv")
+dap <- read_csv("inputs/r_dap_eth_aba_tigray_somali.csv", show_col_types = FALSE)
 # main dataset ------------------------------------------------------------
 
 # set up design object
-ref_svy <- as_survey(.data = df_main_cleand_data, strata = strata)
+ref_svy <- as_survey(.data = df_main_cleand_data)
 
 # analysis
 
@@ -108,7 +117,7 @@ df_dap_education <- bind_rows(tibble::tribble(~variable,
   select(-subset_no)
 
 # set up design object
-   ref_svy_education_loop <- as_survey(.data = df_cleaned_educ_data, strata = strata)
+   ref_svy_education_loop <- as_survey(.data = df_cleaned_educ_data)
 
 # # analysis
 df_nalaysis_education_loop <- analysis_after_survey_creation(input_svy_obj = ref_svy_education_loop,
@@ -134,7 +143,7 @@ df_dap_education2 <- bind_rows(tibble::tribble(~variable,
   select(-subset_no)
 
 # set up design object
-ref_svy_education2_loop <- as_survey(.data = df_cleaned_educ2_data, strata = strata)
+ref_svy_education2_loop <- as_survey(.data = df_cleaned_educ2_data)
 
 # # analysis
 df_analysis_education2_loop <- analysis_after_survey_creation(input_svy_obj = ref_svy_education2_loop,
@@ -145,43 +154,37 @@ df_analysis_education2_loop <- analysis_after_survey_creation(input_svy_obj = re
 
 # roster ------------------------------------------------------------------
 
-# df_dap_roster <- bind_rows(tibble::tribble(~variable,
-#                                            "i.individual_age_cat",
-#                                            "i.individual_genre_cat",
-#                                            "i.individual_age_school_cat",
-#                                            "i.individual_genre_age_cat")) |> 
-#   mutate(split = "all",
-#          subset_2 = "ind_gender"
-#   ) |> 
-#   pivot_longer(cols = starts_with("subset"), names_to = "subset_no", values_to = "subset_1") |> 
-#   filter(!is.na(subset_1), !subset_1 %in% c("NA")) |> 
-#   select(-subset_no)
-
-
-
-# df_main_pivot <- df_main_clean_data_with_weights |> 
-#   pivot_longer(cols = num_males_0to6:num_females_66plusyrs, names_to = "i.num_gender_age", values_to = "i.hh_size_based_on_gender_age")
-# 
-# df_roster_extract <- df_main_pivot |> 
-#   filter(i.hh_size_based_on_gender_age > 0) |> 
-#   uncount(i.hh_size_based_on_gender_age) |> 
-#   mutate(i.individual_gender = ifelse(str_detect(string = i.num_gender_age, pattern = "females"), "Female", "Male"),
-#          i.individual_age_cat = case_when(str_detect(string = i.num_gender_age, pattern = "0to6|7to3yrs|4to6") ~ "cat_0_6",
-#                                           str_detect(string = i.num_gender_age, pattern = "7to13|14to17") ~ "cat_7_17",
-#                                           str_detect(string = i.num_gender_age, pattern = "18to49|50to65") ~ "cat_18_65",
-#                                           str_detect(string = i.num_gender_age, pattern = "66plusyrs") ~ "cat_66+" ))
+df_dap_roster <- bind_rows(tibble::tribble(~variable,
+                                           "ind_educational_status",
+                                           "ind_gender",
+                                           "ind_age")) |>
+  mutate(split = "all",
+         subset_1 = "region",
+         subset_2 = "hh_situation",
+         subset_3 = "hoh_gender",
+         subset_4 = "i.hh_age") |> 
+  pivot_longer(cols = starts_with("subset"), names_to = "subset_no", values_to = "subset_1") |> 
+  filter(!is.na(subset_1), !subset_1 %in% c("NA")) |> 
+  select(-subset_no)
 
 # set up design object
-# ref_svy_roster <- as_survey(.data = df_roster_clean_data, strata = strata, weights = weights)
+ref_svy_roster_loop <- as_survey(.data = df_cleaned_roster_data)
+
 # # analysis
-# df_analysis_roster <- analysis_after_survey_creation(input_svy_obj = ref_svy_roster,
-#                                                      input_dap = df_dap_roster ) |> 
-#   mutate(level = "Individual")
-# 
+df_analysis_roster_loop <- analysis_after_survey_creation(input_svy_obj = ref_svy_roster_loop,
+                                                              input_dap = df_dap_roster)|>
+  
+  
+  mutate(level = "Individual")
+
+
+
+
+
 
 # merge and format analysis ----------------------------------------------------------
 
-combined_analysis <- bind_rows(df_main_analysis, df_nalaysis_education_loop, df_analysis_education2_loop)
+combined_analysis <- bind_rows(df_main_analysis, df_analysis_roster_loop, df_nalaysis_education_loop, df_analysis_education2_loop)
 
 
 integer_cols_i <- c("i.hh_age",
@@ -212,7 +215,7 @@ full_analysis_long <- combined_analysis |>
 
 # output analysis
 
-write_csv(full_analysis_long, paste0("outputs/", butteR::date_file_prefix(), "_full_analysis_aba_tigray_somali.csv"), na="")
-write_csv(full_analysis_long, paste0("outputs/full_analysis_aba_tigray_somali.csv"), na="")
-write_csv(df_main_analysis, paste0("outputs/", butteR::date_file_prefix(), "_combined_analysis_aba_tigray_somali.csv"), na="")
+write_csv(full_analysis_long, paste0("outputs/", butteR::date_file_prefix(), "_full_analysis_aba_somali.csv"), na="")
+write_csv(full_analysis_long, paste0("outputs/full_analysis_aba_somali.csv"), na="")
+write_csv(df_main_analysis, paste0("outputs/", butteR::date_file_prefix(), "_combined_analysis_aba_somali.csv"), na="")
 ###############################################################################
