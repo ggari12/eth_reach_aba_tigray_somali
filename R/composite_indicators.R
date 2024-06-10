@@ -5,6 +5,7 @@
 create_composite_indicators <- function(input_df) {
   input_df |> 
     dplyr::mutate(
+       
           
            i.hh_size = case_when(hh_size <= 3 ~ "between_1_and_3_members",
                                  hh_size <= 6 ~ "between_4_and_6_members",
