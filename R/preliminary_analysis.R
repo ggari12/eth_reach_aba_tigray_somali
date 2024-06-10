@@ -7,9 +7,6 @@ library(supporteR)
 
 source("R/composite_indicators.R")
 
-# packages to install incase
-# devtools::install_github("zackarno/butteR")
-# devtools::install_github("twesigye10/supporteR")
 
 # clean data
 data_path <- "outputs/20240523_clean_data_eth_aba_somali.xlsx"
@@ -52,7 +49,7 @@ df_main_cleand_data[, numeric_cols] <- lapply(df_main_cleand_data[, numeric_cols
 
 
 loop_support_data <- df_main_cleand_data|>
-  dplyr::select(uuid,region,hh_situation,hoh_gender,i.hh_age, strata)
+  dplyr::select(uuid,region,hh_situation,hoh_gender,i.hh_age,strata)
 
 
 #Load data clean loop education
@@ -60,6 +57,7 @@ loop_support_data <- df_main_cleand_data|>
 educ_loop <- readxl::read_excel(path = data_path, sheet = "cleaned_educ_loop", na = "NA")
 df_cleaned_educ_data <- loop_support_data |> 
   inner_join(educ_loop, by = c("uuid" = "_submission__uuid") ) 
+
   
 #Load data clean loop2 education
 
@@ -73,6 +71,51 @@ df_cleaned_roster_data <- loop_support_data |>
   inner_join(roster_loop, by = c("uuid" = "_submission__uuid"))|>
   mutate(ind_educational_status = ifelse(ind_educational_status%in%c("na","not_applicable"),NA_character_,ind_educational_status))
 
+### exclusion of households with no children from the analysis of section educations
+
+df_cleaned_roster_data <- df_cleaned_roster_data|>
+  mutate(statut_education = ifelse(ind_educational_status%in%c("attending_school",
+                                                                  "dropped_out_within_2years",
+                                                                  "enrolled_but_not_attending_school"), 1 ,NA
+                                      ))
+
+
+# "au moins un enfant" is basically the same as the max() function, since it just takes the highest value of all the individual observations
+
+household_level = df_cleaned_roster_data  %>%
+  select(statut_education, uuid)%>%
+  group_by(uuid)%>%
+  summarise(across(statut_education, 
+                   list(max = ~max(., na.rm = TRUE))))
+
+household_level <- household_level %>% mutate_all(~ifelse(. == "-Inf", NA, .)) ## change -Inf to NA
+household_level <- household_level %>% rename_with(~str_remove(., '_max')) ## remove "_max"
+
+### join results to df_cleaned_educ_data
+df_cleaned_educ_data <- df_cleaned_educ_data %>% 
+  left_join(household_level)
+
+### join results to df_cleaned_educ2_data
+df_cleaned_educ2_data <- df_cleaned_educ2_data%>% 
+  left_join(household_level)
+
+## Recoding of education indicators for loop education with no children at school
+
+df_cleaned_educ_data <- df_cleaned_educ_data|>
+  mutate(hh_education_level_attend = ifelse(statut_education == "NA", NA, hh_education_level_attend),
+         education_facility_location = ifelse(statut_education == "NA",NA,education_facility_location),
+         education_facility_owner = ifelse(statut_education == "NA", NA, education_facility_owner),
+         education_functionality_status = ifelse(statut_education == "NA", NA, education_functionality_status))
+
+## Recoding of education indicators for loop education with no children at school
+
+df_cleaned_educ2_data <- df_cleaned_educ2_data|>
+  mutate(not_attending_reasons = ifelse(statut_education == "NA", NA, not_attending_reasons),
+        `not_attending_reasons/dwta` = ifelse(statut_education == "NA", NA,`not_attending_reasons/dwta`),
+        `not_attending_reasons/dk` = ifelse(statut_education == "NA", NA, `not_attending_reasons/dk`),
+        dropout_reason = ifelse(statut_education == "NA", NA, dropout_reason),
+        `dropout_reason/dwta` = ifelse(statut_education == "NA", NA, `dropout_reason/dwta`),
+        `dropout_reason/dk` = ifelse(statut_education == "NA", NA, `dropout_reason/dk`))
 
 
 # tool
@@ -110,8 +153,8 @@ df_dap_education <- bind_rows(tibble::tribble(~variable,
   mutate(split = "all",
          subset_1 = "region",
          subset_2 = "hh_situation",
-         subset_3 = "hoh_gender",
-         subset_4 = "i.hh_age") |> 
+         subset_4 = "i.hh_age",
+         subset_5 = "hoh_gender") |> 
   pivot_longer(cols = starts_with("subset"), names_to = "subset_no", values_to = "subset_1") |> 
   filter(!is.na(subset_1), !subset_1 %in% c("NA")) |> 
   select(-subset_no)
@@ -136,8 +179,8 @@ df_dap_education2 <- bind_rows(tibble::tribble(~variable,
   mutate(split = "all",
          subset_1 = "region",
          subset_2 = "hh_situation",
-         subset_3 = "hoh_gender",
-         subset_4 = "i.hh_age") |> 
+         subset_4 = "i.hh_age",
+         subset_5 = "hoh_gender") |> 
   pivot_longer(cols = starts_with("subset"), names_to = "subset_no", values_to = "subset_1") |> 
   filter(!is.na(subset_1), !subset_1 %in% c("NA")) |> 
   select(-subset_no)
@@ -161,8 +204,8 @@ df_dap_roster <- bind_rows(tibble::tribble(~variable,
   mutate(split = "all",
          subset_1 = "region",
          subset_2 = "hh_situation",
-         subset_3 = "hoh_gender",
-         subset_4 = "i.hh_age") |> 
+         subset_4 = "i.hh_age",
+         subset_5 = "hoh_gender") |> 
   pivot_longer(cols = starts_with("subset"), names_to = "subset_no", values_to = "subset_1") |> 
   filter(!is.na(subset_1), !subset_1 %in% c("NA")) |> 
   select(-subset_no)
