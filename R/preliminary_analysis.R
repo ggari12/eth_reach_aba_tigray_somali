@@ -24,7 +24,9 @@ df_main_cleand_data <- readxl::read_excel(path = data_path, sheet = "cleaned_mai
 
 df_main_cleand_data <- df_main_cleand_data|>
   mutate(drinking_water_source = ifelse(region == "Tigray"&drinking_water_source=="public_tap", "hand_pump",drinking_water_source),
-         cleaning_water_source =  ifelse(region == "Tigray"&cleaning_water_source=="public_tap", "hand_pump",cleaning_water_source))
+         cleaning_water_source =  ifelse(region == "Tigray"&cleaning_water_source=="public_tap", "hand_pump",cleaning_water_source),
+         hh_situation = ifelse(hh_situation == "hh_host_idp", "host", hh_situation))
+  
 
 
 numeric_cols <- c("hh_age",

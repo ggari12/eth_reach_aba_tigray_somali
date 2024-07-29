@@ -95,10 +95,8 @@ df_analysis_dap_info <- df_analysis |>
            choices = ifelse(is.na(response_lable),`choices/options`,response_lable),
            subset_1_val = ifelse(is.na(subset_1_val)&is.na(subset_1_name), "All",
                                  ifelse(subset_1_val == "none", "none",
-                                       ifelse(subset_1_val == "hh_host_idp", "host",
-                                             ifelse(subset_1_val == "hh_host_returnee", "host",
                                                     ifelse(subset_1_val == "female", "hohh_female",
-                                                          ifelse(subset_1_val == "male", "hohh_male",subset_1_val)))))),
+                                                          ifelse(subset_1_val == "male", "hohh_male",subset_1_val)))),
            # subset_1_val_label = recode(subset_1_val, !!!setNames(df_choices$choice_label, df_choices$choice_name)),
            # subset_1_val_label =  ifelse(is.na(subset_1_val_label), "Zone", subset_1_val_label)
            sector = ifelse(is.na(sector) & variable %in% df_support_composite_grps$composite_code, recode(variable, !!!setNames(df_support_composite_grps$grp_label, df_support_composite_grps$composite_code)), sector),
@@ -181,6 +179,7 @@ for (i in 1:length(output)) {
 
           class(current_variable_data$All) <- "percentage"
             class(current_variable_data$host) <- "percentage"
+            # class(current_variable_data$hh_host_idp) <- "percentage"
             # class(current_variable_data$idp) <- "percentage"
             # class(current_variable_data$returnee) <- "percentage"
             class(current_variable_data$hohh_female) <- "percentage"
@@ -198,6 +197,7 @@ for (i in 1:length(output)) {
 
             class(current_variable_data$All) <- "numeric"
             class(current_variable_data$host) <- "numeric"
+            # class(current_variable_data$hh_host_idp) <- "numeric"
             # class(current_variable_data$idp) <- "numeric"
             # class(current_variable_data$returnee) <- "numeric"
             class(current_variable_data$hohh_female) <- "numeric"
